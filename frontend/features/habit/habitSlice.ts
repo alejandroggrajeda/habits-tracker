@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchHabits } from "./habitAPI";
 
 type Habit = {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   createdAt: string;
@@ -16,12 +16,10 @@ const initialState: HabitState = {
   habits: [],
 };
 
-
 export const fetchHabitsThunk = createAsyncThunk(
-  'habit/fetchHabits',
+  "habit/fetchHabits",
   async () => {
-    const response = await fetchHabits();
-    return response;
+    return await fetchHabits();
   }
 );
 
@@ -38,7 +36,7 @@ const habitSlice = createSlice({
     },
     removeHabit: (state, action) => {
       state.habits = state.habits.filter(
-        (habit) => habit.id !== action.payload
+        (habit) => habit._id !== action.payload
       );
     },
   },
