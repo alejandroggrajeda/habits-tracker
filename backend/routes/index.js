@@ -2,11 +2,6 @@ var express = require("express");
 var router = express.Router();
 const Habit = require("../models/Habit");
 
-/* GET home page. */
-router.get("/", function (req, res, next) {
-  res.render("index", { title: "Express" });
-});
-
 router.get("/habits", async (req, res) => {
   try {
     const habits = await Habit.find();
@@ -64,6 +59,61 @@ router.delete("/habits/:id", async (req, res) => {
     res.json({ message: "Habit deleted." });
   } catch (error) {
     res.status(500).json({ error: "Server error." });
+  }
+});
+
+router.patch("/habits/markasdone/:id/", async (req, res) => {
+  try {
+    const habit = await Habit.findById(req.params.id);
+    if (!habit) return res.status(404).json({ error: "Habit not found." });
+
+    const now = new Date();
+    const currentDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    ); // Fecha actual sin hora
+
+    // Convertir lastDone a fecha sin hora para comparación por día
+    const lastDoneDay = new Date(
+      habit.lastDone.getFullYear(),
+      habit.lastDone.getMonth(),
+      habit.lastDone.getDate()
+    );
+
+    // Calcular diferencia en días
+    const diffTime = currentDate - lastDoneDay;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      // Ya marcado hoy, no incrementar contador
+      habit.lastDone = now;
+      await habit.save();
+      return res
+        .status(200)
+        .json({ message: "Habit already marked as done today." });
+    } else if (diffDays === 1) {
+      // Es el día siguiente, incrementar racha
+      habit.days += 1;
+      habit.lastDone = now;
+      habit.lastUpdate = now;
+      await habit.save();
+      return res.status(200).json({
+        message: `Habit marked as done. Current streak: ${habit.days} days.`,
+      });
+    } else {
+      // Han pasado más de un día, reiniciar racha
+      habit.days = 1;
+      habit.lastDone = now;
+      habit.lastUpdate = now;
+      await habit.save();
+      return res
+        .status(200)
+        .json({ message: "Streak reset. Starting new streak." });
+    }
+  } catch (error) {
+    console.error("Error updating habit:", error);
+    return res.status(500).json({ error: "Server error." });
   }
 });
 
