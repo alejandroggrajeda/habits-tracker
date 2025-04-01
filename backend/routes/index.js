@@ -1,58 +1,65 @@
 var express = require("express");
 var router = express.Router();
 const Habit = require("../models/Habit");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
-router.get("/habits", async (req, res) => {
+const authenticateToken = (req, res, next) => {
+  const token = req.header("Authorization");
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized, log in first." });
+  }
+
   try {
-    const habits = await Habit.find();
+    const tokenWithoutBearer = token.replace("Bearer ", "");
+    const verified = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
+    req.user = verified; // Almacena el usuario verificado en la solicitud
+    next();
+  } catch (error) {
+    console.error("Token error:", error); // Imprime el error de token
+    return res.status(403).json({ error: "Invalid or expired Token." });
+  }
+};
+
+router.get("/habits", authenticateToken, async (req, res) => {
+  try {
+    let userId = req.user.id;
+    if (!req.user || !req.user.id) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized, log in first to get habits." });
+    }
+    userId = new mongoose.Types.ObjectId(userId);
+    const habits = await Habit.find({ userId });
     res.json(habits);
   } catch (error) {
-    res.status(500).json({ error: "error del servidor." });
+    res.status(500).json({ error: "server error." });
   }
 });
 
-router.post("/habits", async (req, res) => {
+router.post("/habits", authenticateToken, async (req, res) => {
   try {
     const { title, description } = req.body;
-
-    if (!title || !description)
+    let userId = req.user.id;
+    if (!req.user || !req.user.id) {
       return res
-        .status(400)
-        .json({ error: "title and description are required." });
+        .status(401)
+        .json({ error: "Unauthorized, log in first to add habits." });
+    }
+    userId = new mongoose.Types.ObjectId(userId);
+    if (!title || !description)
+      return res.status(400).json({ error: "Error creating habit" });
 
-    const habit = new Habit({ title, description });
+    const habit = new Habit({ title, description, userId });
     await habit.save();
 
     res.json(habit);
   } catch (error) {
-    res.status(500).json({ error: "error del servidor" });
+    res.status(500).json({ error: "server error" });
   }
 });
 
-router.put("/habits/:id", async (req, res) => {
-  try {
-    const { title, description } = req.body;
-
-    if (!title || !description)
-      return res
-        .status(400)
-        .json({ error: "title and description are required." });
-
-    const habit = await Habit.findByIdAndUpdate(
-      req.params.id,
-      { title, description },
-      { new: true, runValidators: true }
-    );
-
-    if (!habit) return res.status(404).json({ error: "Habit not found." });
-
-    res.json({ message: "el Hábito fue actualizado exitósamente.", habit });
-  } catch (error) {
-    res.status(500).json({ error: "Server error." });
-  }
-});
-
-router.delete("/habits/:id", async (req, res) => {
+router.delete("/habits/:id", authenticateToken, async (req, res) => {
   try {
     const habit = await Habit.findByIdAndDelete(req.params.id);
     if (!habit) res.status(404).json({ error: "Habit not found." });
@@ -62,7 +69,7 @@ router.delete("/habits/:id", async (req, res) => {
   }
 });
 
-router.patch("/habits/markasdone/:id/", async (req, res) => {
+router.patch("/habits/markasdone/:id/", authenticateToken, async (req, res) => {
   try {
     const habit = await Habit.findById(req.params.id);
     if (!habit) return res.status(404).json({ error: "Habit not found." });
