@@ -48,16 +48,13 @@ export const fetchHabitsThunk = createAsyncThunk(
   }
 );
 
-export const markAsDoneThunk = createAsyncThunk(
-  "habit/markAsDone",
+export const markAsDoneThunk = createAsyncThunk("habit/markAsDone",
   async ({ habitId, token }: markAsDoneThunkParams, { rejectWithValue }) => {
     const response = await fetch(
-      `http://localhost:3001/habits/markasdone/${habitId}`,
+      `https://habits-tracker-backend-gilt.vercel.app/habits/markasdone/${habitId}`,
       {
         method: "PATCH",
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
+        headers: {Authorization: 'Bearer ' + token},
       }
     );
     const responseJson = await response.json();
@@ -74,12 +71,10 @@ export const markAsDoneThunk = createAsyncThunk(
 );
 
 
-
 export const fetchAddHabitThunk = createAsyncThunk(
   "habit/fetchAddHabit",
   async ({ token, title, description }: addHabitThunkParams, { rejectWithValue }) => {
     const response = await fetchAddHabit(token, title, description);
-    
     const responseJson = await response.json();
     if (!response.ok) {
       return rejectWithValue("Failed to add Habit");
@@ -116,6 +111,8 @@ const habitSlice = createSlice({
     builder
       .addCase(fetchHabitsThunk.fulfilled, (state, action) => {
         state.habits = action.payload;
+        console.log("Fetched habits data:", action.payload);
+
       })
       .addCase(markAsDoneThunk.fulfilled, (state, action) => {
         state.status[action.meta.arg.habitId] = "succeeded";

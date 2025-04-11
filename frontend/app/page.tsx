@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchHabitsThunk } from "@/features/habit/habitSlice";
 import { RootState, AppDispatch } from "@/Redux/store";
 import Habits from "./habits";
 import {
   fetchRegisterUserThunk,
-  fetchLoginUserThunk,
-  addUser,
+  fetchLoginUserThunk, addUser
 } from "../features/user/userSlice";
 import { getCookie } from "cookies-next";
 
@@ -18,7 +17,7 @@ export default function Home() {
   const user = useSelector((state: RootState) => state.user.user);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
+  
   useEffect(() => {
     const token = getCookie("habitToken");
     if (token) {
@@ -28,6 +27,7 @@ export default function Home() {
       dispatch(fetchHabitsThunk(user.toString()));
     }
   }, [dispatch, user]);
+ 
 
   const handleRegister = () => {
     dispatch(fetchRegisterUserThunk({ username, password }));
@@ -36,6 +36,7 @@ export default function Home() {
   const handleLogin = () => {
     dispatch(fetchLoginUserThunk({ username, password }));
   };
+
 
   return (
     <div className="flex flex-col items-center min-h-screen p-8 pb-20 sm:p-20 font-sans bg-gray-900">

@@ -105,7 +105,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchLoginUserThunk.fulfilled, (state, action) => {
         state.status = "success";
-        state.user = { token: action.payload as string };
+        state.user = action.payload;
         state.error = null;
       });
   },

@@ -36,3 +36,4 @@ docker-compose.override.yml
 # Miscellaneous
 *.bak
 *.tmp
+.vercel

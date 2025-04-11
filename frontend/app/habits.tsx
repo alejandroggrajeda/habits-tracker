@@ -26,18 +26,19 @@ const handleMarkAsDone = (
   dispatch: AppDispatch,
   token: string
 ) => {
-  dispatch(markAsDoneThunk({ habitId, token })).then(() => {
+  dispatch(markAsDoneThunk({ habitId, token }));
+  if(token){
     dispatch(fetchHabitsThunk(token));
-  });
-};
+  }
+}
 
 export default function Habits({ habits }: HabitsProps) {
   const dispatch = useDispatch<AppDispatch>();
   const status = useSelector((state: RootState) => state.habits.status);
   const error = useSelector((state: RootState) => state.habits.error);
   const user = useSelector((state: RootState) => state.user.user);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
 
   const calculateProgress = (days: number): number => {
     return Math.min((days / 66) * 100, 100);
@@ -81,7 +82,7 @@ export default function Habits({ habits }: HabitsProps) {
                   handleMarkAsDone(
                     habit._id,
                     dispatch,
-                    user ? user.toString() : ""
+                    user ? user.toString() : ''
                   )
                 }
                 disabled={status[habit._id] === "loading"}

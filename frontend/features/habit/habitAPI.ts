@@ -1,5 +1,5 @@
 export const fetchHabits = async (token: string) => {
-  const response = await fetch("http://localhost:3001/habits", {
+  const response = await fetch("https://habits-tracker-backend-gilt.vercel.app/habits", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -15,16 +15,17 @@ export const fetchAddHabit = async (
   title: string,
   description: string
 ) => {
-  const response = await fetch("http://localhost:3001/habits/", {
+  const response = await fetch("https://habits-tracker-backend-gilt.vercel.app/habits", {
     method: "POST",
+    credentials: "include",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: 'Bearer ' + token,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ title: title, description: description }),
+    body: JSON.stringify({ "title": title, "description": description }),
   });
   if (!response.ok) {
     throw new Error("Failed to add habit");
   }
-  return response.json();
+  return response;
 };
